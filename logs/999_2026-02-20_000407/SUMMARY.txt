@@ -1,0 +1,31 @@
+[2026-02-20_00:04:07] Run ID: 999 (sanitized: 999)
+[2026-02-20_00:04:07] Run folder: /home/gpu-ws-05/Desktop/GPU-Test-Kit/logs/999_2026-02-20_000407
+[2026-02-20_00:04:07] GPU index: 0
+[2026-02-20_00:04:07] gpu-burn: 60s | memtest_vulkan: 60s | cuda_memtest timeout: 60s
+[2026-02-20_00:04:07] Stopping any existing GPU tests...
+[2026-02-20_00:04:07] Starting dmesg capture in background (sudo required)...
+[2026-02-20_00:04:07] dmesg PID: 3617
+[2026-02-20_00:04:08] TEST A: PCIe bandwidth (cold) - baseline + pinned range
+[2026-02-20_00:04:08] Purpose: Validate host↔device transfer stability/throughput across PCIe and pinned memory behavior.
+[2026-02-20_00:07:24] TEST B: CUDA core burn-in (gpu-burn)
+[2026-02-20_00:07:24] Purpose: Stress CUDA compute under sustained load to expose thermal/power/compute instability.
+[2026-02-20_00:07:24] Duration: 60s
+[2026-02-20_00:08:58] TEST C: PCIe bandwidth (hot) - baseline + pinned range
+[2026-02-20_00:08:58] Purpose: Compare PCIe transfer stability after heat soak (cold vs hot).
+[2026-02-20_00:12:13] TEST D: VRAM correctness (cuda_memtest)
+[2026-02-20_00:12:13] Purpose: Detect VRAM errors/silent corruption using CUDA/OpenCL memory patterns.
+[2026-02-20_00:13:13] TEST E: Vulkan VRAM test (memtest_vulkan)
+[2026-02-20_00:13:13] Purpose: Cross-check VRAM stability/correctness through Vulkan compute path; timed run.
+[2026-02-20_00:13:13] Duration: 60s (minimum recommended ~6 minutes)
+[2026-02-20_00:14:13] Generating PASS/FAIL summary...
+
+==================== SUMMARY CHECKS ====================
+[FAIL] dmesg contains confirmed GPU/PCIe fault signatures.
+[Thu Feb 19 22:59:18 2026] r8169 0000:2a:00.0 eth0: RTL8168h/8111h, 2c:f0:5d:9e:73:59, XID 541, IRQ 91
+[OK] memtest_vulkan: no device loss or memory error signatures detected.
+[OK] cuda_memtest: no explicit mismatch or CUDA failure signatures detected.
+[OK] gpu_burn: no mismatch or CUDA fault signatures detected.
+
+==================== RESULT ====================
+RESULT: FAIL (confirmed GPU, PCIe, or memory fault signatures detected).
+Run folder: /home/gpu-ws-05/Desktop/GPU-Test-Kit/logs/999_2026-02-20_000407

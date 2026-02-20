@@ -1,0 +1,30 @@
+[2026-02-20_01:32:41] Run ID: 1 (sanitized: 1)
+[2026-02-20_01:32:41] Run folder: /home/gpu-ws-05/Desktop/gpu-validation-kit/logs/1_2026-02-20_013241
+[2026-02-20_01:32:41] GPU index: 0
+[2026-02-20_01:32:41] gpu-burn: 60s | memtest_vulkan: 60s | cuda_memtest timeout: 60s
+[2026-02-20_01:32:41] Stopping any existing GPU tests...
+[2026-02-20_01:32:41] Starting dmesg capture in background (sudo required)...
+[2026-02-20_01:32:44] dmesg PID: 5271
+[2026-02-20_01:32:45] TEST A: PCIe bandwidth (cold) - baseline + pinned range
+[2026-02-20_01:32:45] Purpose: Validate host↔device transfer stability/throughput across PCIe and pinned memory behavior.
+[2026-02-20_01:36:01] TEST B: CUDA core burn-in (gpu-burn)
+[2026-02-20_01:36:01] Purpose: Stress CUDA compute under sustained load to expose thermal/power/compute instability.
+[2026-02-20_01:36:01] Duration: 60s
+[2026-02-20_01:37:36] TEST C: PCIe bandwidth (hot) - baseline + pinned range
+[2026-02-20_01:37:36] Purpose: Compare PCIe transfer stability after heat soak (cold vs hot).
+[2026-02-20_01:40:52] TEST D: VRAM correctness (cuda_memtest)
+[2026-02-20_01:40:52] Purpose: Detect VRAM errors/silent corruption using CUDA/OpenCL memory patterns.
+[2026-02-20_01:41:52] TEST E: Vulkan VRAM test (memtest_vulkan)
+[2026-02-20_01:41:52] Purpose: Cross-check VRAM stability/correctness through Vulkan compute path; timed run.
+[2026-02-20_01:41:52] Duration: 60s (minimum recommended ~6 minutes)
+[2026-02-20_01:42:52] Generating PASS/FAIL summary...
+
+==================== SUMMARY CHECKS ====================
+[OK] dmesg: no confirmed NVIDIA GPU/PCIe fault events detected.
+[OK] memtest_vulkan: no device loss or Vulkan failure signatures detected.
+[OK] cuda_memtest: no explicit mismatch or CUDA failure signatures detected.
+[OK] gpu_burn: no mismatch or CUDA fault signatures detected.
+
+==================== RESULT ====================
+RESULT: PASS (no confirmed NVIDIA GPU, PCIe, or memory fault signatures detected).
+Run folder: /home/gpu-ws-05/Desktop/gpu-validation-kit/logs/1_2026-02-20_013241

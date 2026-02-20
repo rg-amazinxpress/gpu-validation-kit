@@ -1,0 +1,13 @@
+[02/20/2026 00:35:33][gpu-ws-05][0]:Running cuda memtest, version 1.2.3
+[02/20/2026 00:35:34][gpu-ws-05][0]:NVRM version: NVIDIA UNIX x86_64 Kernel Module  535.288.01  Tue Nov 18 18:26:41 UTC 2025
+[02/20/2026 00:35:34][gpu-ws-05][0]:num_gpus=1
+[02/20/2026 00:35:34][gpu-ws-05][0]:Device name=Quadro RTX 6000, global memory size=25385631744, serial=1321621057858
+[02/20/2026 00:35:34][gpu-ws-05][0]:Attached to device 0 successfully.
+[02/20/2026 00:35:34][gpu-ws-05][0]:Allocated 23778 MB
+[02/20/2026 00:35:34][gpu-ws-05][0]:Test0 [Walking 1 bit]
+[02/20/2026 00:35:43][gpu-ws-05][0]:Test0 finished in 8.9 seconds
+[02/20/2026 00:35:43][gpu-ws-05][0]:Test1 [Own address test]
+[02/20/2026 00:35:45][gpu-ws-05][0]:Test1 finished in 2.1 seconds
+[02/20/2026 00:35:45][gpu-ws-05][0]:Test2 [Moving inversions, ones&zeros]
+[02/20/2026 00:35:55][gpu-ws-05][0]:Test2 finished in 10.8 seconds
+[02/20/2026 00:35:55][gpu-ws-05][0]:Test3 [Moving inversions, 8 bit pat]
