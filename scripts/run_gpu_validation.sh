@@ -26,6 +26,12 @@ set -euo pipefail
 # ----------------------------
 # CONFIG (edit if needed)
 # ----------------------------
+# # Auto-detect KIT from where the script lives (KIT/scripts/run_gpu_validation.sh)
+# SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# AUTO_KIT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# # Allow override via env var KIT=..., otherwise use auto-detected kit location
+# KIT="${KIT:-$AUTO_KIT}"
 
 # Resolve script path even if symlinked
 SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
