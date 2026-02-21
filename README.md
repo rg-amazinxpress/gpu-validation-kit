@@ -62,6 +62,12 @@ The repo uses multiple tools, each targeting a failure domain:
 
 Monitoring: kernel messages via `dmesg -wT` and optional live monitoring with `nvtop`.
 
+## Using set up script
+```bash
+chmod+ +x set_up.sh
+./scripts/set_up.sh
+```
+
 ## Quick Start
 Install prerequisites, clone the repo, and build tools.
 
