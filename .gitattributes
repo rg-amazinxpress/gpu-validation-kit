@@ -1,0 +1,21 @@
+# linux env = LF
+*.sh text eol=lf
+*.log text eol=lf
+*.txt text eol=lf
+*.md text eol=lf
+
+# Build / test output
+logs/
+
+# Compiled binaries
+bin/
+
+# Cloned external repos
+src/
+
+# Linux artifacts
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
