@@ -1,0 +1,37 @@
+[2026-02-20_00:57:19] Run ID: 2222 (sanitized: 2222)
+[2026-02-20_00:57:19] Run folder: /home/gpu-ws-05/Desktop/gpu-validation-kit/logs/2222_2026-02-20_005719
+[2026-02-20_00:57:19] GPU index: 0
+[2026-02-20_00:57:19] gpu-burn: 120s | memtest_vulkan: 120s | cuda_memtest timeout: 120s
+[2026-02-20_00:57:19] Stopping any existing GPU tests...
+[2026-02-20_00:57:19] Starting dmesg capture in background (sudo required)...
+[2026-02-20_00:57:23] dmesg PID: 4753
+[2026-02-20_00:57:24] TEST A: PCIe bandwidth (cold) - baseline + pinned range
+[2026-02-20_00:57:24] Purpose: Validate host↔device transfer stability/throughput across PCIe (pinned memory).
+[2026-02-20_01:00:39] TEST B: CUDA core burn-in (gpu-burn)
+[2026-02-20_01:00:39] Purpose: Stress CUDA compute under sustained load to expose thermal/power/compute instability.
+[2026-02-20_01:00:39] Duration: 120s
+[2026-02-20_01:03:13] TEST C: PCIe bandwidth (hot) - baseline + pinned range
+[2026-02-20_01:03:13] Purpose: Compare PCIe transfer stability after heat soak (cold vs hot).
+[2026-02-20_01:06:30] TEST D: VRAM correctness (cuda_memtest)
+[2026-02-20_01:06:30] Purpose: Detect VRAM errors/silent corruption using CUDA/OpenCL memory test patterns.
+[2026-02-20_01:08:30] TEST E: Vulkan VRAM test (memtest_vulkan)
+[2026-02-20_01:08:30] Purpose: Cross-check VRAM stability/correctness using Vulkan compute path.
+[2026-02-20_01:08:30] Duration: 120s (minimum recommended >= 360s / ~6 min)
+[2026-02-20_01:10:30] Generating PASS/FAIL summary...
+
+==================== SUMMARY CHECKS ====================
+[FAIL] dmesg shows driver/PCIe errors (Xid/NVRM/AER).
+[Thu Feb 19 22:59:15 2026] pcieport 0000:00:01.1: AER: enabled with IRQ 26
+[Thu Feb 19 22:59:15 2026] pcieport 0000:00:01.2: AER: enabled with IRQ 27
+[Thu Feb 19 22:59:15 2026] pcieport 0000:00:03.1: AER: enabled with IRQ 28
+[Thu Feb 19 22:59:15 2026] pcieport 0000:00:07.1: AER: enabled with IRQ 30
+[Thu Feb 19 22:59:15 2026] pcieport 0000:00:08.1: AER: enabled with IRQ 31
+[Thu Feb 19 22:59:18 2026] r8169 0000:2a:00.0 eth0: RTL8168h/8111h, 2c:f0:5d:9e:73:59, XID 541, IRQ 91
+[Thu Feb 19 22:59:18 2026] NVRM: loading NVIDIA UNIX x86_64 Kernel Module  535.288.01  Tue Nov 18 18:26:41 UTC 2025
+[OK] bandwidthTest: Result = PASS (cold and hot baseline).
+[OK] gpu-burn: GPU 0: OK
+[OK] memtest_vulkan: no error patterns detected.
+[OK] cuda_memtest: no obvious error strings detected.
+
+==================== FINAL RESULT ====================
+RESULT: FAIL (see checks above). Run folder: /home/gpu-ws-05/Desktop/gpu-validation-kit/logs/2222_2026-02-20_005719

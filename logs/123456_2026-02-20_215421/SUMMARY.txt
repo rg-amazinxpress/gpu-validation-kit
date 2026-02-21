@@ -1,0 +1,30 @@
+[2026-02-20_21:54:21] Run ID: 123456 (sanitized: 123456)
+[2026-02-20_21:54:21] Run folder: /home/gpu-ws-05/Desktop/gpu-validation-kit/logs/123456_2026-02-20_215421
+[2026-02-20_21:54:21] GPU index: 0
+[2026-02-20_21:54:21] gpu-burn: 60s | memtest_vulkan: 60s | cuda_memtest timeout: 60s
+[2026-02-20_21:54:21] Stopping any existing GPU tests...
+[2026-02-20_21:54:21] Starting dmesg capture in background (sudo required)...
+[2026-02-20_21:54:24] dmesg PID: 2623
+[2026-02-20_21:54:25] TEST A: PCIe bandwidth (cold) - baseline + pinned range
+[2026-02-20_21:54:25] Purpose: Validate host↔device transfer stability/throughput across PCIe and pinned memory behavior.
+[2026-02-20_21:57:40] TEST B: CUDA core burn-in (gpu-burn)
+[2026-02-20_21:57:40] Purpose: Stress CUDA compute under sustained load to expose thermal/power/compute instability.
+[2026-02-20_21:57:40] Duration: 60s
+[2026-02-20_21:59:14] TEST C: PCIe bandwidth (hot) - baseline + pinned range
+[2026-02-20_21:59:14] Purpose: Compare PCIe transfer stability after heat soak (cold vs hot).
+[2026-02-20_22:02:29] TEST D: VRAM correctness (cuda_memtest)
+[2026-02-20_22:02:29] Purpose: Detect VRAM errors/silent corruption using CUDA/OpenCL memory patterns.
+[2026-02-20_22:03:29] TEST E: Vulkan VRAM test (memtest_vulkan)
+[2026-02-20_22:03:29] Purpose: Cross-check VRAM stability/correctness through Vulkan compute path; timed run.
+[2026-02-20_22:03:29] Duration: 60s (minimum recommended ~6 minutes)
+[2026-02-20_22:04:29] Generating PASS/FAIL summary...
+
+==================== SUMMARY CHECKS ====================
+[OK] dmesg: no confirmed NVIDIA GPU/PCIe fault events detected.
+[OK] memtest_vulkan: no device loss or Vulkan failure signatures detected.
+[OK] cuda_memtest: no explicit mismatch or CUDA failure signatures detected.
+[OK] gpu_burn: no mismatch or CUDA fault signatures detected.
+
+==================== RESULT ====================
+RESULT: PASS (no confirmed NVIDIA GPU, PCIe, or memory fault signatures detected).
+Run folder: /home/gpu-ws-05/Desktop/gpu-validation-kit/logs/123456_2026-02-20_215421
