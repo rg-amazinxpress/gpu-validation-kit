@@ -48,9 +48,9 @@ if [[ ! -d "$KIT/src" ]]; then
 fi
 
 # Times (seconds) - recommended defaults
-GPU_BURN_SECONDS_DEFAULT="3600"   # 60 min (meaningful burn-in)
-VULKAN_SECONDS_DEFAULT="1800"     # 30 min (meaningful Vulkan VRAM run); minimum recommended is >= 360s (~6 min)
-CUDA_MEMTEST_TIMEOUT_DEFAULT="0"  # 0 = no timeout
+GPU_BURN_SECONDS_DEFAULT="3600"   # 60 min
+VULKAN_SECONDS_DEFAULT="1800"     # 30 min; minimum recommended is >= 360s (~6 min)
+CUDA_MEMTEST_TIMEOUT_DEFAULT="1800"  # 30 min 
 
 # bandwidthTest range settings (1MB -> 128MB in 1MB increments)
 BW_START="1048576"
