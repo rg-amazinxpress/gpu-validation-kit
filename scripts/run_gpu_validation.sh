@@ -160,6 +160,89 @@ HAVE_NVTOTIP="1"
 command -v nvtop >/dev/null 2>&1 || HAVE_NVTOTIP="0"
 
 # ----------------------------
+# PREFLIGHT VERIFICATION
+# ----------------------------
+log "Running preflight verification..." | tee -a "$SUMMARY_FILE"
+
+PREFLIGHT_PASS="1"
+
+# Check bandwidthTest
+if [[ -x "$BW_DIR/bandwidthTest" ]]; then
+  log "[OK] bandwidthTest found at: $BW_DIR/bandwidthTest" | tee -a "$SUMMARY_FILE"
+elif [[ ! -d "$BW_DIR" ]]; then
+  log "[WARN] bandwidthTest directory missing: $BW_DIR (will attempt build)" | tee -a "$SUMMARY_FILE"
+else
+  log "[WARN] bandwidthTest binary not executable; will build." | tee -a "$SUMMARY_FILE"
+fi
+
+# Check gpu_burn
+if [[ -x "$BURN_DIR/gpu_burn" ]]; then
+  log "[OK] gpu_burn found at: $BURN_DIR/gpu_burn" | tee -a "$SUMMARY_FILE"
+elif [[ ! -d "$BURN_DIR" ]]; then
+  log "[WARN] gpu_burn directory missing: $BURN_DIR (will attempt build)" | tee -a "$SUMMARY_FILE"
+else
+  log "[WARN] gpu_burn binary not executable; will build." | tee -a "$SUMMARY_FILE"
+fi
+
+# Check cuda_memtest
+if [[ -x "$CUDA_MEMTEST_DIR/cuda_memtest" ]]; then
+  log "[OK] cuda_memtest found at: $CUDA_MEMTEST_DIR/cuda_memtest" | tee -a "$SUMMARY_FILE"
+else
+  log "[FAIL] cuda_memtest binary not found or not executable at: $CUDA_MEMTEST_DIR/cuda_memtest" | tee -a "$SUMMARY_FILE"
+  PREFLIGHT_PASS="0"
+fi
+
+# Check memtest_vulkan (critical check with debug info)
+if [[ -z "$VULKAN_BIN" ]]; then
+  log "[DEBUG] Checking memtest_vulkan paths:" | tee -a "$SUMMARY_FILE"
+  
+  BIN_PATH="$KIT/bin/memtest_vulkan"
+  RUST_PATH="$KIT/src/memtest_vulkan/target/release/memtest_vulkan"
+  
+  log "  Path 1: $BIN_PATH (exists: $(test -f "$BIN_PATH" && echo yes || echo no), executable: $(test -x "$BIN_PATH" && echo yes || echo no))" | tee -a "$SUMMARY_FILE"
+  log "  Path 2: $RUST_PATH (exists: $(test -f "$RUST_PATH" && echo yes || echo no), executable: $(test -x "$RUST_PATH" && echo yes || echo no))" | tee -a "$SUMMARY_FILE"
+  
+  log "[FAIL] memtest_vulkan binary not found in expected locations." | tee -a "$SUMMARY_FILE"
+  PREFLIGHT_PASS="0"
+else
+  log "[OK] memtest_vulkan found at: $VULKAN_BIN" | tee -a "$SUMMARY_FILE"
+fi
+
+# Check GPU access
+if nvidia-smi -i "$GPU_INDEX" >/dev/null 2>&1; then
+  GPU_NAME=$(nvidia-smi -i "$GPU_INDEX" --query-gpu=name --format=csv,noheader)
+  log "[OK] GPU $GPU_INDEX accessible: $GPU_NAME" | tee -a "$SUMMARY_FILE"
+else
+  log "[FAIL] Cannot access GPU at index $GPU_INDEX" | tee -a "$SUMMARY_FILE"
+  PREFLIGHT_PASS="0"
+fi
+
+# Check CUDA availability
+if need_cmd nvcc 2>/dev/null; then
+  CUDA_VERSION=$(nvcc --version | grep -oP "release \K[0-9.]+")
+  log "[OK] CUDA detected (nvcc): version $CUDA_VERSION" | tee -a "$SUMMARY_FILE"
+else
+  log "[WARN] nvcc not found (will retry during build if needed)" | tee -a "$SUMMARY_FILE"
+fi
+
+# Check sudo access for dmesg
+if sudo -n true 2>/dev/null; then
+  log "[OK] sudo access available (passwordless)" | tee -a "$SUMMARY_FILE"
+else
+  log "[WARN] sudo will prompt for password during dmesg capture" | tee -a "$SUMMARY_FILE"
+fi
+
+echo "" | tee -a "$SUMMARY_FILE"
+
+if [[ "$PREFLIGHT_PASS" == "0" ]]; then
+  log "ERROR: Preflight verification FAILED. Address issues above before retrying." | tee -a "$SUMMARY_FILE"
+  exit 1
+fi
+
+log "Preflight verification PASSED. Proceeding with tests..." | tee -a "$SUMMARY_FILE"
+echo "" | tee -a "$SUMMARY_FILE"
+
+# ----------------------------
 # Prompt user for Run ID
 # ----------------------------
 echo "============================================================"
