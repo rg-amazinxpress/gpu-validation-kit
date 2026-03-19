@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
 # ============================================================
-# GPU Validation Kit - Environment Setup
+# GPU Validation Kit - Environment Setup (Ubuntu 22.04)
 # ============================================================
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -39,78 +39,80 @@ libvulkan1 \
 vulkan-tools \
 nvtop \
 curl \
-timeout \
-nvidia-cuda-toolkit
+wget \
+timeout
 
 # ------------------------------------------------------------
-# Verify GPU driver
+# Install NVIDIA Driver 535.x
 # ------------------------------------------------------------
 echo ""
-echo "Checking NVIDIA driver..."
+echo "Installing NVIDIA driver 535..."
 
+sudo apt install -y nvidia-driver-535
+sudo apt-mark hold nvidia-driver-535
+
+# Verify driver
 if ! command -v nvidia-smi &> /dev/null; then
     echo "ERROR: NVIDIA driver not detected"
     exit 1
 fi
 
-nvidia-smi || true
+nvidia-smi
 
 # ------------------------------------------------------------
-# Verify nvcc
+# Install CUDA 12.2
 # ------------------------------------------------------------
+CUDA_VERSION="12.2"
+
 echo ""
-echo "Checking CUDA compiler..."
+echo "Installing CUDA $CUDA_VERSION..."
 
-if command -v nvcc &> /dev/null; then
-    nvcc -V
-else
-    echo "WARNING: nvcc not found"
-fi
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+sudo dpkg -i cuda-keyring_1.1-1_all.deb
+sudo apt update
+sudo apt install -y cuda-toolkit-12-2
+sudo apt-mark hold cuda-toolkit-12-2
 
-# ------------------------------------------------------------
-# Verify Vulkan
-# ------------------------------------------------------------
+# Set environment variables
 echo ""
-echo "Checking Vulkan..."
+echo "Configuring CUDA environment variables..."
+export CUDA_HOME=/usr/local/cuda-$CUDA_VERSION
+export PATH=$CUDA_HOME/bin:$PATH
+export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
 
-if command -v vulkaninfo &> /dev/null; then
-    vulkaninfo --summary | head -n 20
-else
-    echo "WARNING: Vulkan tools missing"
-fi
+# Persist in bashrc for future sessions
+grep -qxF "export CUDA_HOME=/usr/local/cuda-$CUDA_VERSION" ~/.bashrc || echo "export CUDA_HOME=/usr/local/cuda-$CUDA_VERSION" >> ~/.bashrc
+grep -qxF "export PATH=\$CUDA_HOME/bin:\$PATH" ~/.bashrc || echo "export PATH=\$CUDA_HOME/bin:\$PATH" >> ~/.bashrc
+grep -qxF "export LD_LIBRARY_PATH=\$CUDA_HOME/lib64:\$LD_LIBRARY_PATH" ~/.bashrc || echo "export LD_LIBRARY_PATH=\$CUDA_HOME/lib64:\$LD_LIBRARY_PATH" >> ~/.bashrc
 
 # ------------------------------------------------------------
 # Create directories
 # ------------------------------------------------------------
 mkdir -p "$SRC_DIR"
 mkdir -p "$BIN_DIR"
-
 cd "$SRC_DIR"
 
 # ============================================================
 # CUDA Samples (bandwidthTest)
 # ============================================================
-
-if [ ! -d "$SRC_DIR/cuda-samples-11x" ]; then
+if [ ! -d "$SRC_DIR/cuda-samples" ]; then
     echo ""
     echo "Cloning CUDA samples..."
-    git clone https://github.com/NVIDIA/cuda-samples.git cuda-samples-11x
+    git clone https://github.com/NVIDIA/cuda-samples.git cuda-samples
 fi
 
-cd cuda-samples-11x
-git checkout v11.5
+cd cuda-samples
+# Checkout latest compatible tag for CUDA 12.x (optional)
+git checkout master
 
 echo "Building bandwidthTest..."
-
 cd Samples/bandwidthTest
 make -j"$(nproc)"
 
 # ============================================================
 # gpu-burn
 # ============================================================
-
 cd "$SRC_DIR"
-
 if [ ! -d "$SRC_DIR/gpu-burn" ]; then
     echo ""
     echo "Cloning gpu-burn..."
@@ -118,14 +120,12 @@ if [ ! -d "$SRC_DIR/gpu-burn" ]; then
 fi
 
 cd gpu-burn
-make
+make -j"$(nproc)"
 
 # ============================================================
 # cuda_memtest
 # ============================================================
-
 cd "$SRC_DIR"
-
 if [ ! -d "$SRC_DIR/cuda_memtest" ]; then
     echo ""
     echo "Cloning cuda_memtest..."
@@ -134,14 +134,12 @@ fi
 
 mkdir -p cuda_memtest/build
 cd cuda_memtest/build
-
 cmake ..
 make -j"$(nproc)"
 
 # ============================================================
 # Rust + memtest_vulkan
 # ============================================================
-
 if ! command -v cargo &> /dev/null; then
     echo ""
     echo "Installing Rust toolchain..."
@@ -150,7 +148,6 @@ if ! command -v cargo &> /dev/null; then
 fi
 
 cd "$SRC_DIR"
-
 if [ ! -d "$SRC_DIR/memtest_vulkan" ]; then
     echo ""
     echo "Cloning memtest_vulkan..."
@@ -159,13 +156,11 @@ fi
 
 cd memtest_vulkan
 cargo build --release
-
 cp target/release/memtest_vulkan "$BIN_DIR/"
 
 # ============================================================
 # Final validation
 # ============================================================
-
 echo ""
 echo "============================================"
 echo "Environment Validation"
