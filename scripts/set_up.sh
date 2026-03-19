@@ -86,6 +86,39 @@ grep -qxF "export PATH=\$CUDA_HOME/bin:\$PATH" ~/.bashrc || echo "export PATH=\$
 grep -qxF "export LD_LIBRARY_PATH=\$CUDA_HOME/lib64:\$LD_LIBRARY_PATH" ~/.bashrc || echo "export LD_LIBRARY_PATH=\$CUDA_HOME/lib64:\$LD_LIBRARY_PATH" >> ~/.bashrc
 
 # ------------------------------------------------------------
+# Keep display on (X session + TTY)
+# ------------------------------------------------------------
+echo ""
+echo "Configuring display to stay on..."
+
+# Disable DPMS and screensaver in X sessions (immediate effect)
+if command -v xset &> /dev/null; then
+    xset s off
+    xset s noblank
+    xset -dpms
+fi
+
+# Add autostart for GUI sessions
+AUTOSTART_DIR="$HOME/.config/autostart"
+mkdir -p "$AUTOSTART_DIR"
+cat > "$AUTOSTART_DIR/keep_display_on.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Exec=bash -c "xset s off; xset s noblank; xset -dpms"
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=Keep Display On
+Comment=Disable screen blanking and DPMS on startup
+EOF
+
+# Disable TTY console blanking (persistent)
+if ! grep -q "consoleblank=0" /etc/default/grub; then
+    sudo sed -i 's/GRUB_CMDLINE_LINUX="\(.*\)"/GRUB_CMDLINE_LINUX="\1 consoleblank=0"/' /etc/default/grub
+    sudo update-grub
+fi
+
+# ------------------------------------------------------------
 # Create directories
 # ------------------------------------------------------------
 mkdir -p "$SRC_DIR"
@@ -187,3 +220,4 @@ echo "Run validation with:"
 echo ""
 echo "./scripts/run_gpu_validation.sh"
 echo ""
+echo "Display will now stay on in GUI and TTY sessions."
