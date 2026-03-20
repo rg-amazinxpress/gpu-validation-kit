@@ -29,6 +29,7 @@ echo "Installing system dependencies..."
 
 sudo add-apt-repository -y multiverse
 sudo apt update
+sudo apt upgrade -y
 
 sudo apt install -y \
 git \
