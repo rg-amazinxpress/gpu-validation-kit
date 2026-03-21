@@ -40,8 +40,7 @@ libvulkan1 \
 vulkan-tools \
 nvtop \
 curl \
-wget \
-timeout
+wget 
 
 # ------------------------------------------------------------
 # Install NVIDIA Driver 535.x
