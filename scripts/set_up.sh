@@ -1,250 +1,140 @@
 #!/usr/bin/env bash
-set -euo pipefail
 
-# ============================================================
-# GPU Validation Kit - Production Setup (HOLD-SAFE)
-# Target: Ubuntu 22.04 + NVIDIA 535 + CUDA 12.2
-# ============================================================
-
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SRC_DIR="$REPO_ROOT/src"
-BIN_DIR="$REPO_ROOT/bin"
+set -e
 
 echo "============================================"
 echo "GPU Validation Kit - Production Setup"
 echo "============================================"
 
-# ------------------------------------------------------------
-# OS Check
-# ------------------------------------------------------------
-if ! grep -q "22.04" /etc/os-release; then
-    echo "WARNING: This script is validated for Ubuntu 22.04"
-fi
-
-# ------------------------------------------------------------
-# Normalize APT State (CRITICAL FIX)
-# ------------------------------------------------------------
-echo ""
+#############################################
+# [0/8] Normalize APT state
+#############################################
 echo "[0/8] Normalizing APT package state..."
 
-HELD_PKGS=$(apt-mark showhold | grep -E 'nvidia|cuda' || true)
+HELD=$(dpkg --get-selections | grep hold || true)
 
-if [ -n "$HELD_PKGS" ]; then
+if [[ -n "$HELD" ]]; then
     echo "Held packages detected:"
-    echo "$HELD_PKGS"
+    echo "$HELD"
     echo "Removing holds..."
-    sudo apt-mark unhold $HELD_PKGS
-else
-    echo "No held NVIDIA/CUDA packages."
+    echo "$HELD" | awk '{print $1}' | xargs -r sudo apt-mark unhold
 fi
 
-# Remove conflicting Ubuntu CUDA package if present
-if dpkg -l | grep -q nvidia-cuda-toolkit; then
-    echo "Removing conflicting Ubuntu CUDA toolkit..."
-    sudo apt remove -y nvidia-cuda-toolkit
-fi
-
-# ------------------------------------------------------------
-# Base Dependencies
-# ------------------------------------------------------------
-echo ""
+#############################################
+# [1/8] Base dependencies
+#############################################
 echo "[1/8] Installing base dependencies..."
 
-sudo apt update
+sudo apt-get update
 
-sudo apt install -y \
+sudo apt-get install -y \
     build-essential \
     cmake \
-    git \
+    pkg-config \
     curl \
     wget \
-    pkg-config \
-    libvulkan1 \
+    git \
+    linux-headers-$(uname -r) \
     vulkan-tools \
-    nvtop \
-    linux-headers-$(uname -r)
+    libvulkan1 \
+    nvtop
 
-# ------------------------------------------------------------
-# Disable Nouveau
-# ------------------------------------------------------------
-echo ""
+#############################################
+# [2/8] Disable Nouveau
+#############################################
 echo "[2/8] Disabling Nouveau (if present)..."
 
 if lsmod | grep -q nouveau; then
-    echo "Blacklisting nouveau..."
     echo "blacklist nouveau" | sudo tee /etc/modprobe.d/blacklist-nouveau.conf
     echo "options nouveau modeset=0" | sudo tee -a /etc/modprobe.d/blacklist-nouveau.conf
     sudo update-initramfs -u
+    echo "Reboot required to fully disable Nouveau"
 fi
 
-# ------------------------------------------------------------
-# Install NVIDIA Driver 535
-# ------------------------------------------------------------
-echo ""
-echo "[3/8] Installing NVIDIA driver 535..."
+#############################################
+# [3/8] HARD RESET NVIDIA STACK (FIX)
+#############################################
+echo "[3/8] Resetting NVIDIA stack (fix conflicts)..."
 
-sudo apt install -y --allow-change-held-packages nvidia-driver-535
+# Stop display manager (prevents file locks)
+sudo systemctl stop gdm3 2>/dev/null || true
+sudo systemctl stop lightdm 2>/dev/null || true
 
-# ------------------------------------------------------------
-# Add NVIDIA CUDA Repository
-# ------------------------------------------------------------
-echo ""
-echo "[4/8] Adding NVIDIA CUDA repository..."
+# Remove ALL NVIDIA packages
+sudo apt-get remove --purge -y '^nvidia-.*' '^libnvidia-.*' || true
 
-CUDA_KEYRING="/tmp/cuda-keyring.deb"
+# Remove CUDA driver remnants
+sudo apt-get remove --purge -y cuda-drivers cuda-runtime-* || true
 
-if [ ! -f /usr/share/keyrings/cuda-archive-keyring.gpg ]; then
-    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb -O "$CUDA_KEYRING"
-    sudo dpkg -i "$CUDA_KEYRING"
+# Remove firmware conflicts
+sudo apt-get remove --purge -y nvidia-firmware-535-* || true
+
+# Fix broken dpkg state
+sudo dpkg --configure -a
+sudo apt-get -f install -y
+
+# Cleanup
+sudo apt-get autoremove -y
+sudo apt-get clean
+
+#############################################
+# [4/8] Install NVIDIA Driver (clean source)
+#############################################
+echo "[4/8] Installing NVIDIA driver 535 (Ubuntu repo)..."
+
+# Prevent CUDA repo from overriding driver
+sudo mkdir -p /etc/apt/preferences.d
+echo "Package: nvidia-*
+Pin: release o=developer.download.nvidia.com
+Pin-Priority: -1" | sudo tee /etc/apt/preferences.d/nvidia-block-cuda
+
+sudo apt-get update
+sudo apt-get install -y nvidia-driver-535
+
+#############################################
+# [5/8] Install CUDA Toolkit (no driver)
+#############################################
+echo "[5/8] Installing CUDA Toolkit (without driver override)..."
+
+# Install CUDA toolkit only (no driver)
+sudo apt-get install -y cuda-toolkit-11-5
+
+#############################################
+# [6/8] Enable persistence mode
+#############################################
+echo "[6/8] Enabling NVIDIA persistence mode..."
+
+sudo nvidia-smi -pm 1 || true
+
+#############################################
+# [7/8] Prevent display sleep / blanking
+#############################################
+echo "[7/8] Disabling display sleep and screen blanking..."
+
+# For X11 sessions
+if command -v gsettings &> /dev/null; then
+    gsettings set org.gnome.desktop.session idle-delay 0 || true
+    gsettings set org.gnome.desktop.screensaver lock-enabled false || true
 fi
 
-sudo apt update
-
-# ------------------------------------------------------------
-# Install CUDA Toolkit 12.2
-# ------------------------------------------------------------
-echo ""
-echo "[5/8] Installing CUDA Toolkit 12.2..."
-
-sudo apt install -y --allow-change-held-packages cuda-toolkit-12-2
-
-# ------------------------------------------------------------
-# Environment Variables
-# ------------------------------------------------------------
-echo ""
-echo "[6/8] Configuring environment variables..."
-
-CUDA_PATH="/usr/local/cuda-12.2"
-
-if ! grep -q "$CUDA_PATH" ~/.bashrc; then
-    cat <<EOF >> ~/.bashrc
-
-# CUDA 12.2
-export PATH=$CUDA_PATH/bin:\$PATH
-export LD_LIBRARY_PATH=$CUDA_PATH/lib64:\$LD_LIBRARY_PATH
-EOF
+# Disable DPMS (terminal fallback)
+if command -v xset &> /dev/null; then
+    xset s off || true
+    xset -dpms || true
+    xset s noblank || true
 fi
 
-export PATH=$CUDA_PATH/bin:$PATH
-export LD_LIBRARY_PATH=$CUDA_PATH/lib64:$LD_LIBRARY_PATH
+#############################################
+# [8/8] Final verification
+#############################################
+echo "[8/8] Verifying installation..."
 
-# ------------------------------------------------------------
-# Keep Display ON
-# ------------------------------------------------------------
-echo ""
-echo "[7/8] Disabling display sleep..."
+nvidia-smi || {
+    echo "ERROR: nvidia-smi failed"
+    exit 1
+}
 
-mkdir -p ~/.config/autostart
-
-cat <<EOF > ~/.config/autostart/keep_display_on.desktop
-[Desktop Entry]
-Type=Application
-Exec=bash -c "xset s off; xset s noblank; xset -dpms"
-X-GNOME-Autostart-enabled=true
-Name=Keep Display On
-EOF
-
-if ! grep -q "consoleblank=0" /etc/default/grub; then
-    sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="consoleblank=0 /' /etc/default/grub
-    sudo update-grub
-fi
-
-# ------------------------------------------------------------
-# Build Validation Tools
-# ------------------------------------------------------------
-echo ""
-echo "[8/8] Building validation tools..."
-
-mkdir -p "$SRC_DIR" "$BIN_DIR"
-cd "$SRC_DIR"
-
-# CUDA Samples
-if [ ! -d cuda-samples ]; then
-    git clone https://github.com/NVIDIA/cuda-samples.git
-fi
-
-cd cuda-samples
-git checkout v12.2
-
-cd Samples/1_Utilities/bandwidthTest
-make -j"$(nproc)"
-cp bandwidthTest "$BIN_DIR/"
-
-# gpu-burn
-cd "$SRC_DIR"
-if [ ! -d gpu-burn ]; then
-    git clone https://github.com/wilicc/gpu-burn.git
-fi
-
-cd gpu-burn
-make
-cp gpu_burn "$BIN_DIR/"
-
-# cuda_memtest
-cd "$SRC_DIR"
-if [ ! -d cuda_memtest ]; then
-    git clone https://github.com/ComputationalRadiationPhysics/cuda_memtest.git
-fi
-
-mkdir -p cuda_memtest/build
-cd cuda_memtest/build
-cmake ..
-make -j"$(nproc)"
-cp cuda_memtest "$BIN_DIR/"
-
-# memtest_vulkan
-cd "$SRC_DIR"
-
-if ! command -v cargo &> /dev/null; then
-    curl https://sh.rustup.rs -sSf | sh -s -- -y
-    source "$HOME/.cargo/env"
-fi
-
-if [ ! -d memtest_vulkan ]; then
-    git clone https://github.com/GpuZelenograd/memtest_vulkan.git
-fi
-
-cd memtest_vulkan
-cargo build --release
-cp target/release/memtest_vulkan "$BIN_DIR/"
-
-# ------------------------------------------------------------
-# Final Validation
-# ------------------------------------------------------------
-echo ""
-echo "============================================"
-echo "Final Validation Check"
-echo "============================================"
-
-if ! nvidia-smi &> /dev/null; then
-    echo "WARNING: NVIDIA driver not active yet."
-    echo ""
-    echo ">>> REBOOT REQUIRED <<<"
-    echo "Run after reboot:"
-    echo "nvidia-smi"
-    exit 0
-fi
-
-echo ""
-echo "NVIDIA-SMI:"
-nvidia-smi
-
-echo ""
-echo "NVCC:"
-nvcc -V || true
-
-echo ""
-echo "Vulkan:"
-vulkaninfo --summary | head -n 20 || true
-
-echo ""
 echo "============================================"
 echo "SETUP COMPLETE"
+echo "Reboot required: sudo reboot"
 echo "============================================"
-echo ""
-echo "Binaries located in:"
-echo "$BIN_DIR"
-echo ""
-echo "Run validation with:"
-echo "./scripts/run_gpu_validation.sh"
-echo ""
