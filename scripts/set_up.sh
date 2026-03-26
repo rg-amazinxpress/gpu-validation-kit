@@ -7,16 +7,31 @@ echo "GPU Validation Kit - Production Setup"
 echo "============================================"
 
 #############################################
-# [0/8] Normalize APT state
+# [0/8] Normalize APT + repair broken state
 #############################################
 echo "[0/8] Normalizing APT package state..."
 
+# Fix broken dpkg BEFORE anything else
+sudo dpkg --configure -a || true
+sudo apt-get -f install -y || true
+
+# Remove any stuck NVIDIA packages (critical for your error)
+BROKEN_PKGS=$(dpkg -l | grep -E 'nvidia|libnvidia' | grep -E '^iU|^iF|^rc' | awk '{print $2}' || true)
+
+if [[ -n "$BROKEN_PKGS" ]]; then
+    echo "Removing broken NVIDIA packages..."
+    echo "$BROKEN_PKGS" | xargs -r sudo dpkg --remove --force-remove-reinstreq || true
+fi
+
+# Clean again after forced removal
+sudo apt-get -f install -y || true
+
+# Handle held packages
 HELD=$(dpkg --get-selections | grep hold || true)
 
 if [[ -n "$HELD" ]]; then
     echo "Held packages detected:"
     echo "$HELD"
-    echo "Removing holds..."
     echo "$HELD" | awk '{print $1}' | xargs -r sudo apt-mark unhold
 fi
 
