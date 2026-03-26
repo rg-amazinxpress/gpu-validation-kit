@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ============================================================
-# GPU Validation Kit - Production Setup Script
+# GPU Validation Kit - Production Setup (HOLD-SAFE)
 # Target: Ubuntu 22.04 + NVIDIA 535 + CUDA 12.2
 # ============================================================
 
@@ -19,6 +19,29 @@ echo "============================================"
 # ------------------------------------------------------------
 if ! grep -q "22.04" /etc/os-release; then
     echo "WARNING: This script is validated for Ubuntu 22.04"
+fi
+
+# ------------------------------------------------------------
+# Normalize APT State (CRITICAL FIX)
+# ------------------------------------------------------------
+echo ""
+echo "[0/8] Normalizing APT package state..."
+
+HELD_PKGS=$(apt-mark showhold | grep -E 'nvidia|cuda' || true)
+
+if [ -n "$HELD_PKGS" ]; then
+    echo "Held packages detected:"
+    echo "$HELD_PKGS"
+    echo "Removing holds..."
+    sudo apt-mark unhold $HELD_PKGS
+else
+    echo "No held NVIDIA/CUDA packages."
+fi
+
+# Remove conflicting Ubuntu CUDA package if present
+if dpkg -l | grep -q nvidia-cuda-toolkit; then
+    echo "Removing conflicting Ubuntu CUDA toolkit..."
+    sudo apt remove -y nvidia-cuda-toolkit
 fi
 
 # ------------------------------------------------------------
@@ -42,7 +65,7 @@ sudo apt install -y \
     linux-headers-$(uname -r)
 
 # ------------------------------------------------------------
-# Disable Nouveau (prevent conflicts)
+# Disable Nouveau
 # ------------------------------------------------------------
 echo ""
 echo "[2/8] Disabling Nouveau (if present)..."
@@ -60,14 +83,10 @@ fi
 echo ""
 echo "[3/8] Installing NVIDIA driver 535..."
 
-if ! dpkg -l | grep -q nvidia-driver-535; then
-    sudo apt install -y nvidia-driver-535
-else
-    echo "Driver already installed."
-fi
+sudo apt install -y --allow-change-held-packages nvidia-driver-535
 
 # ------------------------------------------------------------
-# Add NVIDIA CUDA Repository (12.2)
+# Add NVIDIA CUDA Repository
 # ------------------------------------------------------------
 echo ""
 echo "[4/8] Adding NVIDIA CUDA repository..."
@@ -87,11 +106,7 @@ sudo apt update
 echo ""
 echo "[5/8] Installing CUDA Toolkit 12.2..."
 
-if ! dpkg -l | grep -q cuda-toolkit-12-2; then
-    sudo apt install -y cuda-toolkit-12-2
-else
-    echo "CUDA Toolkit 12.2 already installed."
-fi
+sudo apt install -y --allow-change-held-packages cuda-toolkit-12-2
 
 # ------------------------------------------------------------
 # Environment Variables
@@ -114,7 +129,7 @@ export PATH=$CUDA_PATH/bin:$PATH
 export LD_LIBRARY_PATH=$CUDA_PATH/lib64:$LD_LIBRARY_PATH
 
 # ------------------------------------------------------------
-# Keep Display ON (GUI + TTY)
+# Keep Display ON
 # ------------------------------------------------------------
 echo ""
 echo "[7/8] Disabling display sleep..."
@@ -125,8 +140,6 @@ cat <<EOF > ~/.config/autostart/keep_display_on.desktop
 [Desktop Entry]
 Type=Application
 Exec=bash -c "xset s off; xset s noblank; xset -dpms"
-Hidden=false
-NoDisplay=false
 X-GNOME-Autostart-enabled=true
 Name=Keep Display On
 EOF
@@ -145,7 +158,7 @@ echo "[8/8] Building validation tools..."
 mkdir -p "$SRC_DIR" "$BIN_DIR"
 cd "$SRC_DIR"
 
-# CUDA Samples (12.x compatible)
+# CUDA Samples
 if [ ! -d cuda-samples ]; then
     git clone https://github.com/NVIDIA/cuda-samples.git
 fi
@@ -196,7 +209,7 @@ cargo build --release
 cp target/release/memtest_vulkan "$BIN_DIR/"
 
 # ------------------------------------------------------------
-# Final Validation Check
+# Final Validation
 # ------------------------------------------------------------
 echo ""
 echo "============================================"
