@@ -38,7 +38,7 @@ SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 AUTO_KIT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-KIT="${KIT:-$AUTO_KIT}"
+KIT="${KIT:-$HOME/Desktop/gpu-validation-kit}"
 
 # Validate kit structure early
 if [[ ! -d "$KIT/src" ]]; then
@@ -338,15 +338,15 @@ fi
 # ----------------------------
 # Paths
 # ----------------------------
-BW_DIR="$KIT/src/cuda-samples-11x/Samples/bandwidthTest"
-BURN_DIR="$KIT/src/gpu-burn"
-CUDA_MEMTEST_DIR="$KIT/src/cuda_memtest/build"
+BW_DIR="$HOME/Desktop/gpu-validation-kit/src/cuda-samples-11x/Samples/bandwidthTest"
+BURN_DIR="$HOME/Desktop/gpu-validation-kit/src/gpu-burn"
+CUDA_MEMTEST_DIR="$HOME/Desktop/gpu-validation-kit/src/cuda_memtest/build"
 
 VULKAN_BIN=""
-if [[ -x "$KIT/bin/memtest_vulkan" ]]; then
-  VULKAN_BIN="$KIT/bin/memtest_vulkan"
-elif [[ -x "$KIT/src/memtest_vulkan/target/release/memtest_vulkan" ]]; then
-  VULKAN_BIN="$KIT/src/memtest_vulkan/target/release/memtest_vulkan"
+if [[ -x "$HOME/Desktop/gpu-validation-kit/bin/memtest_vulkan" ]]; then
+  VULKAN_BIN="$HOME/Desktop/gpu-validation-kit/bin/memtest_vulkan"
+elif [[ -x "$HOME/Desktop/gpu-validation-kit/src/memtest_vulkan/target/release/memtest_vulkan" ]]; then
+  VULKAN_BIN="$HOME/Desktop/gpu-validation-kit/src/memtest_vulkan/target/release/memtest_vulkan"
 fi
 
 # ----------------------------
