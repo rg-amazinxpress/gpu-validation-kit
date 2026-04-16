@@ -38,6 +38,9 @@ SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 AUTO_KIT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+# Ensure HOME is set for path resolution
+HOME="${HOME:-/home/gpu-ws-05}"
+
 KIT="${KIT:-$HOME/Desktop/gpu-validation-kit}"
 
 # Validate kit structure early
