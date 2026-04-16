@@ -61,6 +61,20 @@ BW_END="134217728"
 BW_INC="1048576"
 
 # ----------------------------
+# Paths
+# ----------------------------
+BW_DIR="$HOME/Desktop/gpu-validation-kit/src/cuda-samples-11x/Samples/bandwidthTest"
+BURN_DIR="$HOME/Desktop/gpu-validation-kit/src/gpu-burn"
+CUDA_MEMTEST_DIR="$HOME/Desktop/gpu-validation-kit/src/cuda_memtest/build"
+
+VULKAN_BIN=""
+if [[ -x "$HOME/Desktop/gpu-validation-kit/bin/memtest_vulkan" ]]; then
+  VULKAN_BIN="$HOME/Desktop/gpu-validation-kit/bin/memtest_vulkan"
+elif [[ -x "$HOME/Desktop/gpu-validation-kit/src/memtest_vulkan/target/release/memtest_vulkan" ]]; then
+  VULKAN_BIN="$HOME/Desktop/gpu-validation-kit/src/memtest_vulkan/target/release/memtest_vulkan"
+fi
+
+# ----------------------------
 # Helpers
 # ----------------------------
 log() { echo "[$(date +%F_%T)] $*"; }
@@ -345,20 +359,6 @@ if [[ "$HAVE_NVTOTIP" == "1" ]]; then
   echo
   echo "TIP: In another terminal, run: nvtop  (interactive GPU monitor)"
   echo
-fi
-
-# ----------------------------
-# Paths
-# ----------------------------
-BW_DIR="$HOME/Desktop/gpu-validation-kit/src/cuda-samples-11x/Samples/bandwidthTest"
-BURN_DIR="$HOME/Desktop/gpu-validation-kit/src/gpu-burn"
-CUDA_MEMTEST_DIR="$HOME/Desktop/gpu-validation-kit/src/cuda_memtest/build"
-
-VULKAN_BIN=""
-if [[ -x "$HOME/Desktop/gpu-validation-kit/bin/memtest_vulkan" ]]; then
-  VULKAN_BIN="$HOME/Desktop/gpu-validation-kit/bin/memtest_vulkan"
-elif [[ -x "$HOME/Desktop/gpu-validation-kit/src/memtest_vulkan/target/release/memtest_vulkan" ]]; then
-  VULKAN_BIN="$HOME/Desktop/gpu-validation-kit/src/memtest_vulkan/target/release/memtest_vulkan"
 fi
 
 # ----------------------------
