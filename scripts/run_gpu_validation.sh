@@ -170,7 +170,7 @@ SUMMARY_FILE="${SUMMARY_FILE:-$PRELIM_SUMMARY_FILE}"
 
 # ----------------------------
 # PREFLIGHT VERIFICATION
-# ----------------------------
+# ---------------------------
 log "Running preflight verification..." | tee -a "$SUMMARY_FILE"
 
 PREFLIGHT_PASS="1"
