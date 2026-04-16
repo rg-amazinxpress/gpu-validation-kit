@@ -105,6 +105,14 @@ cd cuda-samples-11x
 git checkout v11.5
 cd Samples/bandwidthTest
 make -j"$(nproc)"
+
+issue with bandwidth testing set up
+
+oem@gpu-ws-06:~/Desktop/gpu-validation-kit/src/cuda-samples-11x/Samples/bandwidthTest$ make -j"$(nproc)"
+>>> GCC Version is greater or equal to 4.8.0 <<<
+/usr/local/cuda/bin/nvcc -ccbin g++ -I../../Common -m64 --threads 0 --std=c++11 -gencode arch=compute_35,code=sm_35 -gencode arch=compute_37,code=sm_37 -gencode arch=compute_50,code=sm_50 -gencode arch=compute_52,code=sm_52 -gencode arch=compute_60,code=sm_60 -gencode arch=compute_61,code=sm_61 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_75,code=sm_75 -gencode arch=compute_80,code=sm_80 -gencode arch=compute_86,code=sm_86 -gencode arch=compute_86,code=compute_86 -o bandwidthTest.o -c bandwidthTest.cu
+make: /usr/local/cuda/bin/nvcc: No such file or directory
+make: *** [Makefile:348: bandwidthTest.o] Error 127
 ```
 
 - gpu-burn
