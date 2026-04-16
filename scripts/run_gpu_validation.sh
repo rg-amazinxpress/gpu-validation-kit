@@ -159,6 +159,12 @@ need_cmd nvidia-smi
 HAVE_NVTOTIP="1"
 command -v nvtop >/dev/null 2>&1 || HAVE_NVTOTIP="0"
 
+# Set defaults for variables used in preflight
+GPU_INDEX="${GPU_INDEX:-0}"
+
+# Ensure logs directory exists for preflight
+mkdir -p "$KIT/logs"
+
 PRELIM_SUMMARY_FILE="$KIT/logs/preflight_summary.log"
 SUMMARY_FILE="${SUMMARY_FILE:-$PRELIM_SUMMARY_FILE}"
 
