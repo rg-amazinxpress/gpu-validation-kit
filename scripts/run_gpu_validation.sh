@@ -41,7 +41,7 @@ AUTO_KIT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # Ensure HOME is set for path resolution
 HOME="${HOME:-/home/gpu-ws-05}"
 
-KIT="${KIT:-$HOME/Desktop/gpu-validation-kit}"
+KIT="${KIT:-$AUTO_KIT}"
 
 # Validate kit structure early
 if [[ ! -d "$KIT/src" ]]; then
@@ -63,15 +63,15 @@ BW_INC="1048576"
 # ----------------------------
 # Paths
 # ----------------------------
-BW_DIR="$HOME/Desktop/gpu-validation-kit/src/cuda-samples-11x/Samples/bandwidthTest"
-BURN_DIR="$HOME/Desktop/gpu-validation-kit/src/gpu-burn"
-CUDA_MEMTEST_DIR="$HOME/Desktop/gpu-validation-kit/src/cuda_memtest/build"
+BW_DIR="$KIT/src/cuda-samples-11x/Samples/bandwidthTest"
+BURN_DIR="$KIT/src/gpu-burn"
+CUDA_MEMTEST_DIR="$KIT/src/cuda_memtest/build"
 
 VULKAN_BIN=""
-if [[ -x "$HOME/Desktop/gpu-validation-kit/bin/memtest_vulkan" ]]; then
-  VULKAN_BIN="$HOME/Desktop/gpu-validation-kit/bin/memtest_vulkan"
-elif [[ -x "$HOME/Desktop/gpu-validation-kit/src/memtest_vulkan/target/release/memtest_vulkan" ]]; then
-  VULKAN_BIN="$HOME/Desktop/gpu-validation-kit/src/memtest_vulkan/target/release/memtest_vulkan"
+if [[ -x "$KIT/bin/memtest_vulkan" ]]; then
+  VULKAN_BIN="$KIT/bin/memtest_vulkan"
+elif [[ -x "$KIT/src/memtest_vulkan/target/release/memtest_vulkan" ]]; then
+  VULKAN_BIN="$KIT/src/memtest_vulkan/target/release/memtest_vulkan"
 fi
 
 # ----------------------------
