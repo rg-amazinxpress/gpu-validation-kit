@@ -163,6 +163,26 @@ chmod +x scripts/run_gpu_validation.sh
 ./scripts/run_gpu_validation.sh
 ```
 
+### Noninteractive 
+
+```bash
+ KIT="$HOME/GPU-KIT" \
+RUN_ID="ORDER-12345" \
+GPU_INDEX=0 \
+GPU_BURN_SECONDS=3600 \
+GPU_BURN_MEMORY_PERCENT=90 \
+RUN_TENSOR_TEST=1 \
+TENSOR_BURN_SECONDS=600 \
+CUDA_MEMTEST_ITERATIONS=1000 \
+CUDA_MEMTEST_PASSES=1 \
+CUDA_MEMTEST_TIMEOUT=1800 \
+VULKAN_SECONDS=1800 \
+VULKAN_DEVICE_NUMBER=1 \
+MAX_GPU_TEMP_C=0 \
+BW_MAX_DROP_PERCENT=20 \
+"$HOME/GPU-KIT/scripts/run_gpu_validation.sh"
+```
+
 The script will prompt for a `Run ID`, GPU index, and test durations. Each run writes a dedicated log folder under `logs/`.
 
 ## Output & Logs
@@ -182,6 +202,30 @@ Typical files:
 - `SUMMARY.txt` (final PASS/FAIL and review items)
 
 Open `SUMMARY.txt` to see `RESULT: PASS` or `RESULT: FAIL` and review notes.
+
+## WSL
+
+### Noninteractive example
+```bash
+KIT="$HOME/GPU-KIT" \
+RUN_ID="SC-ORDER-12345" \
+GPU_INDEX=0 \
+GPU_BURN_SECONDS=900 \
+GPU_BURN_MEMORY_PERCENT=90 \
+CUDA_MEMTEST_ITERATIONS=1000 \
+CUDA_MEMTEST_PASSES=1 \
+CUDA_MEMTEST_TIMEOUT=1800 \
+RUN_TENSOR_TEST=1 \
+TENSOR_BURN_SECONDS=300 \
+"$HOME/GPU-KIT/scripts/wsl_gpu_validation.sh"
+```
+
+#### Result Codes
+
+0 = PASS — all WSL supplemental tests completed
+1 = configuration or preflight failure
+2 = FAIL — explicit computation or memory error
+3 = INCOMPLETE — timeout, abnormal exit, or missing PASS evidence
 
 ## How to Run Tests Independently
 
